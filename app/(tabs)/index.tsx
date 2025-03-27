@@ -1,7 +1,17 @@
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
-import { useState } from 'react';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+
+type MoodEntry = {
+  date: string;
+  rating: number;
+  emoji: string;
+  symptoms: string[];
+};
+
+const sliderWidth = Dimensions.get('window').width - 40;
 
 const getEmoji = (rating: number) => {
   if (rating === 0) return '😢';
@@ -49,10 +59,20 @@ export default function TabOneScreen() {
 
   const handleSubmit = async () => {
     try {
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Error saving mood:', error);
+    }
+  };
+
+  const resetRating = async () => {
+    try {
+      // Save the entry with symptoms when resetting
       const newEntry = {
         date: new Date().toLocaleDateString(),
         rating: Math.round(rating),
         emoji: getEmoji(rating),
+        symptoms: Array.from(selectedSymptoms),
       };
 
       // Get existing history
@@ -65,16 +85,13 @@ export default function TabOneScreen() {
       // Save updated history
       await AsyncStorage.setItem('moodHistory', JSON.stringify(history));
 
-      setSubmitted(true);
+      // Reset the form
+      setRating(5);
+      setSubmitted(false);
+      setSelectedSymptoms(new Set());
     } catch (error) {
       console.error('Error saving mood:', error);
     }
-  };
-
-  const resetRating = () => {
-    setRating(5);
-    setSubmitted(false);
-    setSelectedSymptoms(new Set());
   };
 
   const toggleSymptom = (symptomId: string) => {
@@ -177,9 +194,6 @@ export default function TabOneScreen() {
   );
 }
 
-const { width } = Dimensions.get('window');
-const sliderWidth = width - 60;
-
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
@@ -193,6 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#fff',
   },
   header: {
     alignItems: 'center',

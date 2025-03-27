@@ -46,4 +46,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  symptomTag: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  symptomText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  symptomsContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
 }); 
