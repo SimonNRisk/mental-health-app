@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Dimensions, ScrollView } from
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import StrategiesPopup from '../components/StrategiesPopup';
 
 type MoodEntry = {
   date: string;
@@ -56,6 +57,9 @@ export default function TabOneScreen() {
   const [rating, setRating] = useState<number>(5);
   const [submitted, setSubmitted] = useState(false);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
+  const [showStrategies, setShowStrategies] = useState(false);
+  const [savedRating, setSavedRating] = useState<number>(5);
+  const [popupSymptoms, setPopupSymptoms] = useState<string[]>([]);
 
   const handleSubmit = async () => {
     try {
@@ -67,14 +71,21 @@ export default function TabOneScreen() {
 
   const resetRating = async () => {
     try {
+      const currentRating = Math.round(rating);
+      setSavedRating(currentRating);
+      const currentSymptoms = Array.from(selectedSymptoms);
+      console.log('Selected symptoms before saving:', currentSymptoms);
+
       // Save the entry with symptoms when resetting
       const newEntry = {
         date: new Date().toISOString().split('T')[0], // Format: YYYY-MM-DD
         timestamp: new Date().getTime(), // Add timestamp for precise sorting
-        rating: Math.round(rating),
+        rating: currentRating,
         emoji: getEmoji(rating),
-        symptoms: Array.from(selectedSymptoms),
+        symptoms: currentSymptoms,
       };
+
+      console.log('New entry being created:', newEntry);
 
       // Get existing history
       const existingHistory = await AsyncStorage.getItem('moodHistory');
@@ -85,6 +96,11 @@ export default function TabOneScreen() {
 
       // Save updated history
       await AsyncStorage.setItem('moodHistory', JSON.stringify(history));
+
+      // Store symptoms for popup and show it
+      setPopupSymptoms(currentSymptoms);
+      setShowStrategies(true);
+      console.log('Showing strategies popup with symptoms:', currentSymptoms);
 
       // Reset the form
       setRating(5);
@@ -186,11 +202,17 @@ export default function TabOneScreen() {
               style={[styles.resetButton, { backgroundColor: ratingColor }]} 
               onPress={resetRating}
             >
-              <Text style={styles.resetButtonText}>Track Another Mood</Text>
+              <Text style={styles.resetButtonText}>Track Entry</Text>
             </TouchableOpacity>
           </View>
         )}
       </View>
+      <StrategiesPopup
+        visible={showStrategies}
+        onClose={() => setShowStrategies(false)}
+        moodRating={savedRating}
+        symptoms={popupSymptoms}
+      />
     </ScrollView>
   );
 }
