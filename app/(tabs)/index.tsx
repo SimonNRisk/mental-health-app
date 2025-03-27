@@ -69,7 +69,8 @@ export default function TabOneScreen() {
     try {
       // Save the entry with symptoms when resetting
       const newEntry = {
-        date: new Date().toLocaleDateString(),
+        date: new Date().toISOString().split('T')[0], // Format: YYYY-MM-DD
+        timestamp: new Date().getTime(), // Add timestamp for precise sorting
         rating: Math.round(rating),
         emoji: getEmoji(rating),
         symptoms: Array.from(selectedSymptoms),
@@ -79,8 +80,8 @@ export default function TabOneScreen() {
       const existingHistory = await AsyncStorage.getItem('moodHistory');
       const history = existingHistory ? JSON.parse(existingHistory) : [];
 
-      // Add new entry
-      history.push(newEntry);
+      // Add new entry to the beginning of the array
+      history.unshift(newEntry);
 
       // Save updated history
       await AsyncStorage.setItem('moodHistory', JSON.stringify(history));

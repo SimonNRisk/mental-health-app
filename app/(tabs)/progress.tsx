@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 type MoodEntry = {
   date: string;
+  timestamp: number;
   rating: number;
   emoji: string;
   symptoms: string[];
@@ -39,6 +40,15 @@ const getSymptomLabel = (symptomId: string) => {
   return symptomId;
 };
 
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
 export default function ProgressScreen() {
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
   const [averageMood, setAverageMood] = useState(0);
@@ -48,14 +58,15 @@ export default function ProgressScreen() {
   const loadMoodHistory = async () => {
     try {
       const history = await AsyncStorage.getItem('moodHistory');
+      
       if (history) {
         const parsedHistory = JSON.parse(history);
-        console.log('Loaded history:', parsedHistory); // Debug log
         
-        // Sort history by date (most recent first)
+        // Sort history by timestamp (most recent first)
         const sortedHistory = parsedHistory.sort((a: MoodEntry, b: MoodEntry) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+          return b.timestamp - a.timestamp;
         });
+        
         setMoodHistory(sortedHistory);
         
         // Calculate average mood
@@ -65,7 +76,6 @@ export default function ProgressScreen() {
         // Calculate most common symptoms
         const symptomCounts: { [key: string]: number } = {};
         sortedHistory.forEach((entry: MoodEntry) => {
-          console.log('Processing entry:', entry); // Debug log
           if (entry.symptoms && entry.symptoms.length > 0) {
             entry.symptoms.forEach((symptom: string) => {
               symptomCounts[symptom] = (symptomCounts[symptom] || 0) + 1;
@@ -160,7 +170,7 @@ export default function ProgressScreen() {
                       <Text style={styles.emoji}>{entry.emoji}</Text>
                       <Text style={styles.rating}>Rating: {entry.rating}/10</Text>
                     </View>
-                    <Text style={styles.date}>{entry.date}</Text>
+                    <Text style={styles.date}>{formatDate(entry.date)}</Text>
                     {entry.symptoms && entry.symptoms.length > 0 && (
                       <View style={styles.symptomsContainer}>
                         {entry.symptoms.map((symptom) => (
